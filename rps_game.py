@@ -1,5 +1,6 @@
 import os
 import random
+import json
 from typing import List, Tuple
 from openai import OpenAI
 from anthropic import Anthropic
@@ -27,9 +28,9 @@ class Agent:
             f.write(f"========= Round {round_num}:\n{thought}\n\n")
 
     def make_move(self) -> str:
-        self.think()
-        self.maybe_chat()
-        return self.guess()
+        response = self.get_ai_response_json()
+        self.process_response(response)
+        return response['guess']
 
     def get_ai_response(self, prompt: str, max_tokens: int = 300) -> str:
         if self.name == "GPT-4o":
@@ -48,34 +49,46 @@ class Agent:
             )
             return message.content[0].text
 
-    def review_and_update_guess(self, initial_guess: str, opponent_chat: str) -> str:
-        prompt = f"You initially guessed {initial_guess} for this round of rock-paper-scissors. Your opponent then said: '{opponent_chat}'. Would you like to change your guess? If yes, what's your new guess? If no, stick with your original guess. Respond with only 'rock', 'paper', 'scissors', or 'stay'."
-        decision = self.get_ai_response(prompt, max_tokens=10).lower().strip()
-        return decision if decision in ["rock", "paper", "scissors"] else initial_guess
+    def get_ai_response_json(self) -> dict:
+        prompt = self.create_prompt()
+        response_str = self.get_ai_response(prompt)
+        try:
+            return json.loads(response_str)
+        except json.JSONDecodeError:
+            print(f"Error decoding JSON for {self.name}. Using default response.")
+            return {"thoughts": "", "chat": "", "guess": random.choice(["rock", "paper", "scissors"])}
 
-    def think(self) -> None:
-        prompt = f"You are playing rock-paper-scissors. Your opponent's move history is {self.opponent_moves}. The current scoreboard is {self.last_scoreboard}. What's your strategy for the next move? Explain your reasoning."
-        thought = self.get_ai_response(prompt)
+    def create_prompt(self) -> str:
+        return f"""You are playing rock-paper-scissors. Your opponent's move history is {self.opponent_moves}. The current scoreboard is {self.last_scoreboard}.
+
+Please provide your response in the following JSON format:
+
+{{
+    "thoughts": "Your strategy and reasoning for the next move",
+    "chat": "A short, strategic message to your opponent (optional, leave empty string if you don't want to chat)",
+    "guess": "Your move (rock, paper, or scissors)"
+}}
+
+Ensure your "guess" is exactly one of: "rock", "paper", or "scissors".
+Your "thoughts" should explain your strategy.
+Your "chat" is optional and should try to influence your opponent's next move or make them second-guess their strategy.
+
+Respond with only the JSON object, no other text."""
+
+    def process_response(self, response: dict) -> None:
+        # Log thought
+        thought = response.get('thoughts', '')
         self.log_thought(len(self.thought_history) + 1, thought)
         self.thought_history.append(thought)
 
-    def maybe_chat(self) -> None:
-        if random.random() < 0.5:  # 50% chance to chat
-            message = self.generate_chat_message()
-            self.chat(message)
-
-    def generate_chat_message(self) -> str:
-        prompt = "Generate a short, strategic message to your opponent in a rock-paper-scissors game. Try to influence their next move or make them second-guess their strategy."
-        return self.get_ai_response(prompt, max_tokens=100)
+        # Maybe chat
+        chat_message = response.get('chat', '')
+        if chat_message:
+            self.chat(chat_message)
 
     def chat(self, message: str) -> None:
         full_message = f"{self.name}: {message}"
         self.server.log_chat(len(self.thought_history), full_message)
-
-    def guess(self) -> str:
-        prompt = f"Based on your previous analysis, what's your next move in rock-paper-scissors? Respond with only 'rock', 'paper', or 'scissors'."
-        move = self.get_ai_response(prompt, max_tokens=10).lower().strip()
-        return move if move in ["rock", "paper", "scissors"] else random.choice(["rock", "paper", "scissors"])
 
     def update_results(self, result: Tuple[str, str]) -> None:
         winner, scoreboard = result
@@ -183,13 +196,9 @@ def play_game(num_rounds: int = 10) -> None:
             elif last_winner:
                 agents = [last_winner, agents[0] if agents[1] == last_winner else agents[1]]
 
-            # Get initial moves from agents
+            # Get moves from agents
             moves = [agent.make_move() for agent in agents]
             
-            # Give the first agent a chance to review and update their guess
-            if len(server.chat_history) > 0 and server.chat_history[-1].startswith(agents[1].name):
-                moves[0] = agents[0].review_and_update_guess(moves[0], server.chat_history[-1].split(": ", 1)[1])
-
             # Process round
             result = server.process_round(agents[0], moves[0], agents[1], moves[1])
             
@@ -200,7 +209,7 @@ def play_game(num_rounds: int = 10) -> None:
             # Determine the winner for the next round
             last_winner = agents[0] if result[0] == agents[0].name else agents[1] if result[0] == agents[1].name else None
             
-            # Log thought processes
+            # Print thought processes
             print("\nThought processes:")
             for agent in agents:
                 print(f"{agent.name}: {agent.thought_history[-1]}")
@@ -210,7 +219,6 @@ def play_game(num_rounds: int = 10) -> None:
             for message in server.chat_history[-3:]:  # Show last 3 entries (2 possible chats + 1 round result)
                 if not message.startswith("Round"):  # Don't print the round results here
                     print(message)
-                    server.log_chat(round_num, message)
         
         except Exception as e:
             print(f"An error occurred in round {round_num}: {str(e)}")

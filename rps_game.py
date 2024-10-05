@@ -53,10 +53,14 @@ class Agent:
         prompt = self.create_prompt()
         response_str = self.get_ai_response(prompt)
         try:
-            return json.loads(response_str)
+            response = json.loads(response_str)
+            self.thought_history.append(response)  # Store the entire response
+            return response
         except json.JSONDecodeError:
             print(f"Error decoding JSON for {self.name}. Using default response.")
-            return {"thoughts": "", "chat": "", "guess": random.choice(["rock", "paper", "scissors"])}
+            default_response = {"thoughts": "", "chat": "", "guess": random.choice(["rock", "paper", "scissors"])}
+            self.thought_history.append(default_response)  # Store the default response
+            return default_response
 
     def create_prompt(self) -> str:
         return f"""You are playing rock-paper-scissors. Your opponent's move history is {self.opponent_moves}. The current scoreboard is {self.last_scoreboard}.
@@ -78,8 +82,7 @@ Respond with only the JSON object, no other text."""
     def process_response(self, response: dict) -> None:
         # Log thought
         thought = response.get('thoughts', '')
-        self.log_thought(len(self.thought_history) + 1, thought)
-        self.thought_history.append(thought)
+        self.log_thought(len(self.thought_history), thought)
 
         # Maybe chat
         chat_message = response.get('chat', '')
@@ -100,7 +103,7 @@ Respond with only the JSON object, no other text."""
             self.opponent_moves.append(opponent_move)
 
     def determine_opponent_move(self, winner: str) -> str:
-        my_move = self.guess()
+        my_move = self.thought_history[-1]['guess']  # Get the last guess from thought history
         if (winner == self.name and my_move == "paper") or (winner != self.name and my_move == "scissors"):
             return "rock"
         elif (winner == self.name and my_move == "scissors") or (winner != self.name and my_move == "rock"):
@@ -212,7 +215,7 @@ def play_game(num_rounds: int = 10) -> None:
             # Print thought processes
             print("\nThought processes:")
             for agent in agents:
-                print(f"{agent.name}: {agent.thought_history[-1]}")
+                print(f"{agent.name}: {agent.thought_history[-1]['thoughts']}")
             
             # Print chat history for this round
             print("\nChat history for this round:")
@@ -231,7 +234,7 @@ def play_game(num_rounds: int = 10) -> None:
     for agent in [agent1, agent2]:
         print(f"{agent.name}: ---------------------")
         for thought in agent.thought_history:
-            print(thought)
+            print(thought['thoughts'])
         print()
 
 if __name__ == "__main__":

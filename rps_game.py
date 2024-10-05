@@ -1,7 +1,7 @@
 import os
 import random
 from typing import List, Tuple
-import openai
+from openai import OpenAI
 from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
 
 class Agent:
@@ -14,7 +14,7 @@ class Agent:
         self.opponent_moves: List[str] = []
         
         if self.name == "GPT-4o":
-            openai.api_key = os.getenv("OPENAI_API_KEY")
+            self.openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         elif self.name == "Claude Sonnet 3.5":
             self.anthropic = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
@@ -28,7 +28,7 @@ class Agent:
         prompt = f"You are playing rock-paper-scissors. Your opponent's move history is {self.opponent_moves}. The current scoreboard is {self.last_scoreboard}. What's your strategy for the next move? Explain your reasoning."
         
         if self.name == "GPT-4o":
-            response = openai.ChatCompletion.create(
+            response = self.openai_client.chat.completions.create(
                 model="gpt-4",
                 messages=[{"role": "user", "content": prompt}]
             )
@@ -52,7 +52,7 @@ class Agent:
         prompt = "Generate a short, strategic message to your opponent in a rock-paper-scissors game. Try to influence their next move or make them second-guess their strategy."
         
         if self.name == "GPT-4o":
-            response = openai.ChatCompletion.create(
+            response = self.openai_client.chat.completions.create(
                 model="gpt-4",
                 messages=[{"role": "user", "content": prompt}]
             )
@@ -75,7 +75,7 @@ class Agent:
         prompt = f"Based on your previous analysis, what's your next move in rock-paper-scissors? Respond with only 'rock', 'paper', or 'scissors'."
         
         if self.name == "GPT-4o":
-            response = openai.ChatCompletion.create(
+            response = self.openai_client.chat.completions.create(
                 model="gpt-4",
                 messages=[{"role": "user", "content": prompt}]
             )

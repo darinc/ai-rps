@@ -1,0 +1,104 @@
+========= Round 1:
+ Claude Sonnet 3.5: Good luck! May the best strategist win.
+
+Round 1 Results:
+GPT-4o chose: rock
+Claude Sonnet 3.5 chose: paper
+Winner: Claude Sonnet 3.5
+Scoreboard: {'GPT-4o': 0, 'Claude Sonnet 3.5': 1, 'Ties': 0}
+
+========= Round 2:
+ Claude Sonnet 3.5: That was a solid opening move. Let's see if you can keep up the pressure!
+
+Round 2 Results:
+Claude Sonnet 3.5 chose: rock
+GPT-4o chose: scissors
+Winner: Claude Sonnet 3.5
+Scoreboard: {'GPT-4o': 0, 'Claude Sonnet 3.5': 2, 'Ties': 0}
+
+========= Round 3:
+ Claude Sonnet 3.5: Interesting choices so far. I wonder what you'll do next...
+========= Round 3:
+ GPT-4o: I know your next move. Let's see if you can outsmart me!
+
+Round 3 Results:
+Claude Sonnet 3.5 chose: rock
+GPT-4o chose: rock
+Winner: Tie
+Scoreboard: {'GPT-4o': 0, 'Claude Sonnet 3.5': 2, 'Ties': 1}
+
+========= Round 4:
+ Claude Sonnet 3.5: Interesting choices so far. I wonder what you'll do next...
+========= Round 4:
+ GPT-4o: I have a feeling you're about to switch it up. Good luck!
+
+Round 4 Results:
+Claude Sonnet 3.5 chose: paper
+GPT-4o chose: paper
+Winner: Tie
+Scoreboard: {'GPT-4o': 0, 'Claude Sonnet 3.5': 2, 'Ties': 2}
+
+========= Round 5:
+ Claude Sonnet 3.5: Interesting choices so far. I wonder what you'll do next...
+========= Round 5:
+ GPT-4o: I wonder if you'll go for scissors this time?
+
+Round 5 Results:
+Claude Sonnet 3.5 chose: scissors
+GPT-4o chose: rock
+Winner: GPT-4o
+Scoreboard: {'GPT-4o': 1, 'Claude Sonnet 3.5': 2, 'Ties': 2}
+
+========= Round 6:
+ GPT-4o: Let's see if I can break your streak this time!
+========= Round 6:
+ Claude Sonnet 3.5: Interesting choices so far. I wonder if you have a favorite move?
+
+Round 6 Results:
+GPT-4o chose: rock
+Claude Sonnet 3.5 chose: paper
+Winner: Claude Sonnet 3.5
+Scoreboard: {'GPT-4o': 1, 'Claude Sonnet 3.5': 3, 'Ties': 2}
+
+========= Round 7:
+ Claude Sonnet 3.5: Interesting pattern you've got there. I wonder what you'll do next...
+
+Round 7 Results:
+Claude Sonnet 3.5 chose: rock
+GPT-4o chose: scissors
+Winner: Claude Sonnet 3.5
+Scoreboard: {'GPT-4o': 1, 'Claude Sonnet 3.5': 4, 'Ties': 2}
+
+========= Round 8:
+ Claude Sonnet 3.5: Your strategy is quite interesting. I wonder if you're planning to switch things up this round?
+========= Round 8:
+ GPT-4o: I've noticed a pattern in your moves. Let's see if you can surprise me this time!
+
+Round 8 Results:
+Claude Sonnet 3.5 chose: scissors
+GPT-4o chose: scissors
+Winner: Tie
+Scoreboard: {'GPT-4o': 1, 'Claude Sonnet 3.5': 4, 'Ties': 3}
+
+========= Round 9:
+ Claude Sonnet 3.5: Interesting choices so far. I wonder if you'll stick to your pattern or mix things up?
+========= Round 9:
+ GPT-4o: I wonder if you'll stick to your pattern or try something different this time!
+
+Round 9 Results:
+Claude Sonnet 3.5 chose: rock
+GPT-4o chose: rock
+Winner: Tie
+Scoreboard: {'GPT-4o': 1, 'Claude Sonnet 3.5': 4, 'Ties': 4}
+
+========= Round 10:
+ Claude Sonnet 3.5: You seem to favor rock. Feeling solid about your strategy?
+========= Round 10:
+ GPT-4o: You seem to like 'rock' quite a bit. Wonder what you'll play next!
+
+Round 10 Results:
+Claude Sonnet 3.5 chose: paper
+GPT-4o chose: scissors
+Winner: GPT-4o
+Scoreboard: {'GPT-4o': 2, 'Claude Sonnet 3.5': 4, 'Ties': 4}
+

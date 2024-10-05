@@ -1,0 +1,30 @@
+========= Round 1:
+Since this is the first move and there's no history to analyze, I'll start with a random choice. Rock is a common opening move, so I'll go with paper to potentially counter that.
+
+========= Round 2:
+Given the opponent's previous move of rock, they might expect me to play paper. However, they might also anticipate this and switch to scissors. To counter this, I'll play rock, which would tie against another rock or win against scissors. This also helps to break any potential pattern recognition.
+
+========= Round 3:
+My opponent has played rock and scissors so far, with no discernible pattern. They might expect me to play paper to counter their previous rock move. However, they might also anticipate this and switch to scissors. Given the unpredictability, I'll choose rock, which would tie against another rock or win against their potential scissors play.
+
+========= Round 4:
+The opponent has played rock and scissors so far. There's a slight tendency towards rock, but with only two moves, it's not a strong pattern. Given that I'm behind in the score, I need to take a calculated risk. Paper could be a good choice as it beats rock (which the opponent might play again) and doesn't lose to scissors (which the opponent played last).
+
+========= Round 5:
+The opponent has played rock and scissors so far, with no clear pattern. They might expect me to play paper next, anticipating another rock. To counter this, I'll play scissors, which beats paper if they try to counter my anticipated paper play.
+
+========= Round 6:
+Based on the opponent's history, they seem to favor rock, playing it twice out of three moves. However, they might be aware of this pattern and try to change it. Given that they just played rock, they might be less likely to play it again. I'll choose paper to counter a potential rock, while also covering the possibility of them switching to scissors.
+
+========= Round 7:
+Based on the opponent's history, they seem to favor rock. They've played rock 3 out of 4 times. While they might expect me to play paper to counter this, they might also try to outsmart by switching to scissors. I'll take a calculated risk and play rock, hoping they'll overthink and choose scissors.
+
+========= Round 8:
+Based on the opponent's move history, they seem to favor rock and scissors, with no paper plays. They've just played scissors, and they often follow scissors with rock. However, they might expect me to anticipate this and play paper. To counter this potential mind game, I'll play scissors.
+
+========= Round 9:
+The opponent has played rock 3 times and scissors 2 times, but never paper. They might be less likely to play paper next. Given their pattern, they might be due for scissors. To counter this, I'll play rock.
+
+========= Round 10:
+The opponent has played rock more frequently, especially recently. They might continue this trend or switch to paper expecting me to play rock. I'll play paper to counter a potential rock and tie with paper.
+

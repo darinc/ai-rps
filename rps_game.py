@@ -15,9 +15,11 @@ class Agent:
         self.log_file = f"{name.lower().replace(' ', '-')}-thought.log"
         
         if self.name == "GPT-4o":
-            self.openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+            self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+            self.model = "gpt-4o-2024-08-06"
         elif self.name == "Claude Sonnet 3.5":
-            self.anthropic = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+            self.client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+            self.model = "claude-3-5-sonnet-20240620"
 
     def log_thought(self, round_num: int, thought: str):
         with open(self.log_file, 'a') as f:
@@ -26,47 +28,31 @@ class Agent:
     def make_move(self) -> str:
         self.think()
         self.maybe_chat()
-        move = self.guess()
-        return move
+        return self.guess()
+
+    def get_ai_response(self, prompt: str, max_tokens: int = 300) -> str:
+        if self.name == "GPT-4o":
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content
+        elif self.name == "Claude Sonnet 3.5":
+            response = self.client.completions.create(
+                model=self.model,
+                prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
+                max_tokens_to_sample=max_tokens
+            )
+            return response.completion
 
     def review_and_update_guess(self, initial_guess: str, opponent_chat: str) -> str:
         prompt = f"You initially guessed {initial_guess} for this round of rock-paper-scissors. Your opponent then said: '{opponent_chat}'. Would you like to change your guess? If yes, what's your new guess? If no, stick with your original guess. Respond with only 'rock', 'paper', 'scissors', or 'stay'."
-        
-        if self.name == "GPT-4o":
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o-2024-08-06",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            decision = response.choices[0].message.content.lower().strip()
-        elif self.name == "Claude Sonnet 3.5":
-            response = self.anthropic.completions.create(
-                model="claude-3-5-sonnet-20240620",
-                prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
-                max_tokens_to_sample=10
-            )
-            decision = response.completion.lower().strip()
-
-        if decision in ["rock", "paper", "scissors"]:
-            return decision
-        return initial_guess
+        decision = self.get_ai_response(prompt, max_tokens=10).lower().strip()
+        return decision if decision in ["rock", "paper", "scissors"] else initial_guess
 
     def think(self) -> None:
         prompt = f"You are playing rock-paper-scissors. Your opponent's move history is {self.opponent_moves}. The current scoreboard is {self.last_scoreboard}. What's your strategy for the next move? Explain your reasoning."
-        
-        if self.name == "GPT-4o":
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o-2024-08-06",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            thought = response.choices[0].message.content
-        elif self.name == "Claude Sonnet 3.5":
-            response = self.anthropic.completions.create(
-                model="claude-3-5-sonnet-20240620",
-                prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
-                max_tokens_to_sample=300
-            )
-            thought = response.completion
-
+        thought = self.get_ai_response(prompt)
         self.log_thought(len(self.thought_history) + 1, thought)
         self.thought_history.append(thought)
 
@@ -77,65 +63,34 @@ class Agent:
 
     def generate_chat_message(self) -> str:
         prompt = "Generate a short, strategic message to your opponent in a rock-paper-scissors game. Try to influence their next move or make them second-guess their strategy."
-        
-        if self.name == "GPT-4o":
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o-2024-08-06",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            message = response.choices[0].message.content
-        elif self.name == "Claude Sonnet 3.5":
-            response = self.anthropic.completions.create(
-                model="claude-3-5-sonnet-20240620",
-                prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
-                max_tokens_to_sample=100
-            )
-            message = response.completion
-
-        return message
+        return self.get_ai_response(prompt, max_tokens=100)
 
     def chat(self, message: str) -> None:
         full_message = f"{self.name}: {message}"
-        self.server.log_chat(full_message)
+        self.server.log_chat(len(self.thought_history), full_message)
 
     def guess(self) -> str:
         prompt = f"Based on your previous analysis, what's your next move in rock-paper-scissors? Respond with only 'rock', 'paper', or 'scissors'."
-        
-        if self.name == "GPT-4o":
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o-2024-08-06",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            move = response.choices[0].message.content.lower().strip()
-        elif self.name == "Claude Sonnet 3.5":
-            response = self.anthropic.completions.create(
-                model="claude-3-5-sonnet-20240620",
-                prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
-                max_tokens_to_sample=10
-            )
-            move = response.completion.lower().strip()
-
-        # Ensure valid move
-        if move not in ["rock", "paper", "scissors"]:
-            move = random.choice(["rock", "paper", "scissors"])
-
-        return move
+        move = self.get_ai_response(prompt, max_tokens=10).lower().strip()
+        return move if move in ["rock", "paper", "scissors"] else random.choice(["rock", "paper", "scissors"])
 
     def update_results(self, result: Tuple[str, str]) -> None:
         winner, scoreboard = result
         self.last_result = winner
         self.last_scoreboard = scoreboard
         
-        # Update opponent's last move
         if winner != "Tie":
-            opponent_move = "rock"  # default
-            if (winner == self.name and self.guess() == "paper") or (winner != self.name and self.guess() == "scissors"):
-                opponent_move = "rock"
-            elif (winner == self.name and self.guess() == "scissors") or (winner != self.name and self.guess() == "rock"):
-                opponent_move = "paper"
-            elif (winner == self.name and self.guess() == "rock") or (winner != self.name and self.guess() == "paper"):
-                opponent_move = "scissors"
+            opponent_move = self.determine_opponent_move(winner)
             self.opponent_moves.append(opponent_move)
+
+    def determine_opponent_move(self, winner: str) -> str:
+        my_move = self.guess()
+        if (winner == self.name and my_move == "paper") or (winner != self.name and my_move == "scissors"):
+            return "rock"
+        elif (winner == self.name and my_move == "scissors") or (winner != self.name and my_move == "rock"):
+            return "paper"
+        else:
+            return "scissors"
 
 class Server:
     def __init__(self):

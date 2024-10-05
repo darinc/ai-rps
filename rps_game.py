@@ -96,12 +96,12 @@ Please provide your response in the following JSON format do not include mardown
 
 {{
     "thoughts": "Your strategy and reasoning for the next move",
-    "chat": "A short, strategic message to your opponent (optional, leave empty string if you don't want to chat)",
+    "chat": "A strategic message to your opponent (optional, leave empty string if you don't want to chat)",
     "guess": "Your move (rock, paper, or scissors)"
 }}
 
 Ensure your "guess" is exactly one of: "rock", "paper", or "scissors".
-Your "thoughts" should explain your strategy.
+Your "thoughts" are your internal dialog.  This should explain your strategy.
 Your "chat" is optional and should try to influence your opponent's next move or make them second-guess their strategy.
 
 Respond with only the JSON object, no other text."""

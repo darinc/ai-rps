@@ -79,7 +79,7 @@ class Agent:
     def create_prompt(self) -> str:
         return f"""You are playing rock-paper-scissors. Your opponent's move history is {self.opponent_moves}. The current scoreboard is {self.last_scoreboard}.
 
-Please provide your response in the following JSON format:
+Please provide your response in the following JSON format do not include mardown or any other text:
 
 {{
     "thoughts": "Your strategy and reasoning for the next move",

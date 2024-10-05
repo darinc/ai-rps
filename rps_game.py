@@ -29,13 +29,13 @@ class Agent:
         
         if self.name == "GPT-4o":
             response = self.openai_client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-2024-08-06",
                 messages=[{"role": "user", "content": prompt}]
             )
             decision = response.choices[0].message.content.lower().strip()
         elif self.name == "Claude Sonnet 3.5":
             response = self.anthropic.completions.create(
-                model="claude-2",
+                model="claude-3-5-sonnet-20240620",
                 prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
                 max_tokens_to_sample=10
             )
@@ -50,13 +50,13 @@ class Agent:
         
         if self.name == "GPT-4o":
             response = self.openai_client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-2024-08-06",
                 messages=[{"role": "user", "content": prompt}]
             )
             thought = response.choices[0].message.content
         elif self.name == "Claude Sonnet 3.5":
             response = self.anthropic.completions.create(
-                model="claude-2",
+                model="claude-3-5-sonnet-20240620",
                 prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
                 max_tokens_to_sample=300
             )
@@ -74,13 +74,13 @@ class Agent:
         
         if self.name == "GPT-4o":
             response = self.openai_client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-2024-08-06",
                 messages=[{"role": "user", "content": prompt}]
             )
             message = response.choices[0].message.content
         elif self.name == "Claude Sonnet 3.5":
             response = self.anthropic.completions.create(
-                model="claude-2",
+                model="claude-3-5-sonnet-20240620",
                 prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
                 max_tokens_to_sample=100
             )
@@ -97,13 +97,13 @@ class Agent:
         
         if self.name == "GPT-4o":
             response = self.openai_client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-2024-08-06",
                 messages=[{"role": "user", "content": prompt}]
             )
             move = response.choices[0].message.content.lower().strip()
         elif self.name == "Claude Sonnet 3.5":
             response = self.anthropic.completions.create(
-                model="claude-2",
+                model="claude-3-5-sonnet-20240620",
                 prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
                 max_tokens_to_sample=10
             )

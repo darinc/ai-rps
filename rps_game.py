@@ -33,12 +33,17 @@ class Agent:
         return response['guess']
 
     def get_ai_response(self, prompt: str, max_tokens: int = 300) -> str:
+        print(f"\nDebug: Outgoing request for {self.name}")
+        print(f"Prompt: {prompt}")
+        print(f"Model: {self.model}")
+        print(f"Max tokens: {max_tokens}")
+
         if self.name == "GPT-4o":
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}]
             )
-            return response.choices[0].message.content
+            result = response.choices[0].message.content
         elif self.name == "Claude Sonnet 3.5":
             message = self.client.messages.create(
                 model=self.model,
@@ -47,19 +52,28 @@ class Agent:
                     {"role": "user", "content": prompt}
                 ]
             )
-            return message.content[0].text
+            result = message.content[0].text
+
+        print(f"\nDebug: Incoming response for {self.name}")
+        print(f"Raw response: {result}")
+        return result
 
     def get_ai_response_json(self) -> dict:
         prompt = self.create_prompt()
         response_str = self.get_ai_response(prompt)
         try:
             response = json.loads(response_str)
-            self.thought_history.append(response)  # Store the entire response
+            print(f"\nDebug: Parsed JSON for {self.name}")
+            print(f"Parsed response: {json.dumps(response, indent=2)}")
+            self.thought_history.append(response)
             return response
-        except json.JSONDecodeError:
-            print(f"Error decoding JSON for {self.name}. Using default response.")
+        except json.JSONDecodeError as e:
+            print(f"\nDebug: Error decoding JSON for {self.name}")
+            print(f"Error message: {str(e)}")
+            print(f"Response string: {response_str}")
             default_response = {"thoughts": "", "chat": "", "guess": random.choice(["rock", "paper", "scissors"])}
-            self.thought_history.append(default_response)  # Store the default response
+            print(f"Using default response: {json.dumps(default_response, indent=2)}")
+            self.thought_history.append(default_response)
             return default_response
 
     def create_prompt(self) -> str:

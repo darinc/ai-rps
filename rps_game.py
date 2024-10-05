@@ -27,6 +27,15 @@ class Agent:
         with open(self.log_file, 'a') as f:
             f.write(f"========= Round {round_num}:\n{thought}\n\n")
 
+    def log_debug(self, round_num: int, prompt: str, response: str):
+        debug_log_file = os.path.join(self.server.log_directory, f"{self.name.lower().replace(' ', '-')}-debug.log")
+        with open(debug_log_file, 'a') as f:
+            f.write(f"========= Round {round_num} =========\n")
+            f.write("Request:\n")
+            f.write(f"{prompt}\n\n")
+            f.write("Response:\n")
+            f.write(f"{response}\n\n")
+
     def make_move(self) -> str:
         response = self.get_ai_response_json()
         self.process_response(response)
@@ -56,6 +65,11 @@ class Agent:
 
         print(f"\nDebug: Incoming response for {self.name}")
         print(f"Raw response: {result}")
+
+        # Log the debug information
+        round_num = len(self.thought_history) + 1  # Current round number
+        self.log_debug(round_num, prompt, result)
+
         return result
 
     def get_ai_response_json(self) -> dict:
@@ -263,6 +277,10 @@ def play_game(num_rounds: int = 10) -> None:
         for thought in agent.thought_history:
             print(thought['thoughts'])
         print()
+
+    print(f"\nDebug logs for each agent are saved in {server.log_directory}:")
+    print(f"- {agent1.name}: {agent1.name.lower().replace(' ', '-')}-debug.log")
+    print(f"- {agent2.name}: {agent2.name.lower().replace(' ', '-')}-debug.log")
 
 if __name__ == "__main__":
     play_game()

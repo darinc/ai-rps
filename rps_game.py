@@ -10,7 +10,7 @@ class Agent:
     def __init__(self, name: str, server: 'Server'):
         self.name = name
         self.server = server
-        self.thought_history: List[str] = []
+        self.thought_history: List[dict] = []
         self.last_result: str = ""
         self.last_scoreboard: str = ""
         self.opponent_moves: List[str] = []
@@ -28,8 +28,8 @@ class Agent:
             f.write(f"========= Round {round_num}:\n{thought}\n\n")
 
     def log_debug(self, round_num: int, prompt: str, response: str):
-        debug_log_file = os.path.join(self.server.log_directory, f"{self.name.lower().replace(' ', '-')}-debug.log")
-        with open(debug_log_file, 'a') as f:
+        debug_log_file = os.path.join(self.server.log_directory, f"{self.name.lower().replace(' ', '-')}-debug-round-{round_num}.log")
+        with open(debug_log_file, 'w') as f:
             f.write(f"========= Round {round_num} =========\n")
             f.write("Request:\n")
             f.write(f"{prompt}\n\n")
@@ -104,9 +104,20 @@ class Agent:
             return default_response
 
     def create_prompt(self) -> str:
-        return f"""You are playing rock-paper-scissors. Your opponent's move history is {self.opponent_moves}. The current scoreboard is {self.last_scoreboard}.
+        thought_history = "\n".join([f"Round {i+1}: {thought['thoughts']}" for i, thought in enumerate(self.thought_history)])
+        chat_history = "\n".join(self.server.get_chat_history())
+        
+        prompt = f"""You are playing rock-paper-scissors. Your name is {self.name}.
 
-Please provide your response in the following JSON format do not include mardown or any other text:
+Your thought history:
+{thought_history}
+
+Chat history:
+{chat_history}
+
+Your opponent's move history is {self.opponent_moves}. The current scoreboard is {self.last_scoreboard}.
+
+Please provide your response in the following JSON format do not include markdown or any other text:
 
 {{
     "thoughts": "Your strategy and reasoning for the next move",
@@ -115,10 +126,12 @@ Please provide your response in the following JSON format do not include mardown
 }}
 
 Ensure your "guess" is exactly one of: "rock", "paper", or "scissors".
-Your "thoughts" are your internal dialog.  This should explain your strategy.
+Your "thoughts" are your internal dialog. This should explain your strategy.
 Your "chat" is optional and should try to influence your opponent's next move or make them second-guess their strategy.
 
 Respond with only the JSON object, no other text."""
+
+        return prompt
 
     def process_response(self, response: dict) -> None:
         # Log thought
@@ -162,6 +175,9 @@ class Server:
         self.chat_history: List[str] = []
         self.log_directory = self.create_log_directory()
         self.chat_log_file = os.path.join(self.log_directory, "chat.log")
+
+    def get_chat_history(self) -> List[str]:
+        return self.chat_history
 
     def create_log_directory(self) -> str:
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")

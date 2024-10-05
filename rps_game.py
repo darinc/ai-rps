@@ -24,6 +24,27 @@ class Agent:
         move = self.guess()
         return move
 
+    def review_and_update_guess(self, initial_guess: str, opponent_chat: str) -> str:
+        prompt = f"You initially guessed {initial_guess} for this round of rock-paper-scissors. Your opponent then said: '{opponent_chat}'. Would you like to change your guess? If yes, what's your new guess? If no, stick with your original guess. Respond with only 'rock', 'paper', 'scissors', or 'stay'."
+        
+        if self.name == "GPT-4o":
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            decision = response.choices[0].message.content.lower().strip()
+        elif self.name == "Claude Sonnet 3.5":
+            response = self.anthropic.completions.create(
+                model="claude-2",
+                prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
+                max_tokens_to_sample=10
+            )
+            decision = response.completion.lower().strip()
+
+        if decision in ["rock", "paper", "scissors"]:
+            return decision
+        return initial_guess
+
     def think(self) -> None:
         prompt = f"You are playing rock-paper-scissors. Your opponent's move history is {self.opponent_moves}. The current scoreboard is {self.last_scoreboard}. What's your strategy for the next move? Explain your reasoning."
         
@@ -157,28 +178,41 @@ def play_game(num_rounds: int = 10) -> None:
     server = Server()
     agent1 = Agent("GPT-4o", server)
     agent2 = Agent("Claude Sonnet 3.5", server)
+    agents = [agent1, agent2]
     
+    last_winner = None
+
     for round_num in range(1, num_rounds + 1):
         print(f"\nRound {round_num}")
         
         try:
-            # Get moves from agents
-            move1 = agent1.make_move()
-            move2 = agent2.make_move()
+            # Determine the order of agents for this round
+            if round_num == 1:
+                random.shuffle(agents)
+            elif last_winner:
+                agents = [last_winner, agents[0] if agents[1] == last_winner else agents[1]]
+
+            # Get initial moves from agents
+            moves = [agent.make_move() for agent in agents]
             
+            # Give the first agent a chance to review and update their guess
+            if len(server.chat_history) > 0 and server.chat_history[-1].startswith(agents[1].name):
+                moves[0] = agents[0].review_and_update_guess(moves[0], server.chat_history[-1].split(": ", 1)[1])
+
             # Process round
-            result = server.process_round(agent1, move1, agent2, move2)
+            result = server.process_round(agents[0], moves[0], agents[1], moves[1])
             
             # Update agents with results
-            agent1.update_results(result)
-            agent2.update_results(result)
+            for agent in agents:
+                agent.update_results(result)
+            
+            # Determine the winner for the next round
+            last_winner = agents[0] if result[0] == agents[0].name else agents[1] if result[0] == agents[1].name else None
             
             # Log thought processes
             print("\nThought processes:")
-            for thought in agent1.thought_history[-1:]:
-                print(f"{agent1.name}: {thought}")
-            for thought in agent2.thought_history[-1:]:
-                print(f"{agent2.name}: {thought}")
+            for agent in agents:
+                print(f"{agent.name}: {agent.thought_history[-1]}")
             
             # Print chat history for this round
             print("\nChat history for this round:")
@@ -193,12 +227,11 @@ def play_game(num_rounds: int = 10) -> None:
     server.print_final_results()
     
     print("\nFinal thought processes:")
-    print(f"{agent1.name}:")
-    for thought in agent1.thought_history:
-        print(thought)
-    print(f"\n{agent2.name}:")
-    for thought in agent2.thought_history:
-        print(thought)
+    for agent in [agent1, agent2]:
+        print(f"{agent.name}:")
+        for thought in agent.thought_history:
+            print(thought)
+        print()
 
 if __name__ == "__main__":
     play_game()

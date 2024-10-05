@@ -160,7 +160,7 @@ class Server:
     def log_chat(self, round_num: int, message: str) -> None:
         self.chat_history.append(message)
         with open(self.chat_log_file, 'a') as f:
-            f.write(f"========= Round {round_num}: {message}\n")
+            f.write(f"========= Round {round_num}:\n {message}\n")
 
     def log_round_results(self, round_num: int, agent1: Agent, move1: str, agent2: Agent, move2: str, winner: str):
         result_str = (

@@ -24,7 +24,7 @@ class Agent:
 
     def log_thought(self, round_num: int, thought: str):
         with open(self.log_file, 'a') as f:
-            f.write(f"Round {round_num}:\n{thought}\n\n")
+            f.write(f"========= Round {round_num}:\n{thought}\n\n")
 
     def make_move(self) -> str:
         self.think()
@@ -139,7 +139,7 @@ class Server:
     def log_chat(self, round_num: int, message: str) -> None:
         self.chat_history.append(message)
         with open(self.chat_log_file, 'a') as f:
-            f.write(f"Round {round_num}: {message}\n")
+            f.write(f"========= Round {round_num}: {message}\n")
 
     def print_final_results(self) -> None:
         print("\nFinal Results:")
@@ -184,12 +184,12 @@ def play_game(num_rounds: int = 10) -> None:
             last_winner = agents[0] if result[0] == agents[0].name else agents[1] if result[0] == agents[1].name else None
             
             # Log thought processes
-            print("\nThought processes:")
+            print("\nThought processes: --------------------------------")
             for agent in agents:
-                print(f"{agent.name}: {agent.thought_history[-1]}")
+                print(f"{agent.name}: {agent.thought_history[-1]} ----------")
             
             # Print chat history for this round
-            print("\nChat history for this round:")
+            print("\nChat history for this round: --------------------------------")
             for message in server.chat_history[-2:]:  # Assuming max 2 messages per round
                 print(message)
                 server.log_chat(round_num, message)
@@ -203,7 +203,7 @@ def play_game(num_rounds: int = 10) -> None:
     
     print(f"\nFinal thought processes (saved in {server.log_directory}):")
     for agent in [agent1, agent2]:
-        print(f"{agent.name}:")
+        print(f"{agent.name}: ---------------------")
         for thought in agent.thought_history:
             print(thought)
         print()

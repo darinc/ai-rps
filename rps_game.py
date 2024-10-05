@@ -3,6 +3,7 @@ import random
 from typing import List, Tuple
 from openai import OpenAI
 from anthropic import Anthropic
+from datetime import datetime
 
 class Agent:
     def __init__(self, name: str, server: 'Server'):
@@ -12,7 +13,7 @@ class Agent:
         self.last_result: str = ""
         self.last_scoreboard: str = ""
         self.opponent_moves: List[str] = []
-        self.log_file = f"{name.lower().replace(' ', '-')}-thought.log"
+        self.log_file = os.path.join(server.log_directory, f"{name.lower().replace(' ', '-')}-thought.log")
         
         if self.name == "GPT-4o":
             self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -102,7 +103,14 @@ class Server:
             "Ties": 0
         }
         self.chat_history: List[str] = []
-        self.chat_log_file = "chat.log"
+        self.log_directory = self.create_log_directory()
+        self.chat_log_file = os.path.join(self.log_directory, "chat.log")
+
+    def create_log_directory(self) -> str:
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
+        log_dir = os.path.join("log", timestamp)
+        os.makedirs(log_dir, exist_ok=True)
+        return log_dir
 
     def process_round(self, agent1: Agent, move1: str, agent2: Agent, move2: str) -> Tuple[str, str]:
         print(f"{agent1.name} chose {move1}")
@@ -193,7 +201,7 @@ def play_game(num_rounds: int = 10) -> None:
     # Print final results
     server.print_final_results()
     
-    print("\nFinal thought processes:")
+    print(f"\nFinal thought processes (saved in {server.log_directory}):")
     for agent in [agent1, agent2]:
         print(f"{agent.name}:")
         for thought in agent.thought_history:

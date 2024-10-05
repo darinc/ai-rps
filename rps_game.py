@@ -131,6 +131,11 @@ class Server:
             self.scoreboard[agent2.name] += 1
         
         print(f"Winner: {winner}")
+        
+        # Log the round results
+        round_num = len(agent1.thought_history)  # Assuming thought_history length represents the current round
+        self.log_round_results(round_num, agent1, move1, agent2, move2, winner)
+        
         return winner, self.get_scoreboard()
 
     def get_scoreboard(self) -> str:
@@ -140,6 +145,18 @@ class Server:
         self.chat_history.append(message)
         with open(self.chat_log_file, 'a') as f:
             f.write(f"========= Round {round_num}: {message}\n")
+
+    def log_round_results(self, round_num: int, agent1: Agent, move1: str, agent2: Agent, move2: str, winner: str):
+        result_str = (
+            f"Round {round_num} Results:\n"
+            f"{agent1.name} chose: {move1}\n"
+            f"{agent2.name} chose: {move2}\n"
+            f"Winner: {winner}\n"
+            f"{self.get_scoreboard()}\n"
+        )
+        with open(self.chat_log_file, 'a') as f:
+            f.write(f"\n{result_str}\n")
+        self.chat_history.append(result_str)
 
     def print_final_results(self) -> None:
         print("\nFinal Results:")
@@ -184,15 +201,16 @@ def play_game(num_rounds: int = 10) -> None:
             last_winner = agents[0] if result[0] == agents[0].name else agents[1] if result[0] == agents[1].name else None
             
             # Log thought processes
-            print("\nThought processes: --------------------------------")
+            print("\nThought processes:")
             for agent in agents:
-                print(f"{agent.name}: {agent.thought_history[-1]} ----------")
+                print(f"{agent.name}: {agent.thought_history[-1]}")
             
             # Print chat history for this round
-            print("\nChat history for this round: --------------------------------")
-            for message in server.chat_history[-2:]:  # Assuming max 2 messages per round
-                print(message)
-                server.log_chat(round_num, message)
+            print("\nChat history for this round:")
+            for message in server.chat_history[-3:]:  # Show last 3 entries (2 possible chats + 1 round result)
+                if not message.startswith("Round"):  # Don't print the round results here
+                    print(message)
+                    server.log_chat(round_num, message)
         
         except Exception as e:
             print(f"An error occurred in round {round_num}: {str(e)}")

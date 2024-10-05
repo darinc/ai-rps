@@ -61,6 +61,19 @@ class Agent:
     def get_ai_response_json(self) -> dict:
         prompt = self.create_prompt()
         response_str = self.get_ai_response(prompt)
+        
+        # Remove ```json from the beginning and ``` from the end if they exist
+        response_str = response_str.strip()
+        if response_str.startswith("```json"):
+            response_str = response_str[7:]
+        if response_str.endswith("```"):
+            response_str = response_str[:-3]
+        
+        response_str = response_str.strip()  # Remove any remaining whitespace
+        
+        print(f"\nDebug: Cleaned response string for {self.name}")
+        print(f"Cleaned response: {response_str}")
+        
         try:
             response = json.loads(response_str)
             print(f"\nDebug: Parsed JSON for {self.name}")

@@ -20,6 +20,8 @@ class Agent:
         thought = f"{self.name} is analyzing previous moves and formulating a strategy..."
         if self.opponent_moves:
             thought += f" Opponent's last move was {self.opponent_moves[-1]}."
+            thought += f" Based on the opponent's move history, they seem to favor {max(set(self.opponent_moves), key=self.opponent_moves.count)}."
+        thought += f" Current scoreboard: {self.last_scoreboard}"
         self.thought_history.append(thought)
 
     def maybe_chat(self) -> None:
@@ -33,7 +35,12 @@ class Agent:
             "You'll never guess what I'm going to play.",
             "Rock is looking pretty good right now...",
             "Scissors are sharp today.",
-            "I heard paper is the way to go."
+            "I heard paper is the way to go.",
+            f"Interesting move last time. I wonder what you'll do now.",
+            "I'm starting to see a pattern in your moves.",
+            "Let's mix things up a bit, shall we?",
+            "I'm going for the win this time!",
+            "Your strategy is quite intriguing."
         ]
         return random.choice(messages)
 
@@ -139,6 +146,11 @@ def play_game(num_rounds: int = 10) -> None:
             print(thought)
         for thought in agent2.thought_history[-1:]:
             print(thought)
+        
+        # Print chat history for this round
+        print("\nChat history for this round:")
+        for message in server.chat_history[-2:]:  # Assuming max 2 messages per round
+            print(message)
     
     # Print final results
     server.print_final_results()

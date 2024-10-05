@@ -1,5 +1,8 @@
+import os
 import random
 from typing import List, Tuple
+import openai
+from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
 
 class Agent:
     def __init__(self, name: str, server: 'Server'):
@@ -9,6 +12,11 @@ class Agent:
         self.last_result: str = ""
         self.last_scoreboard: str = ""
         self.opponent_moves: List[str] = []
+        
+        if self.name == "GPT-4o":
+            openai.api_key = os.getenv("OPENAI_API_KEY")
+        elif self.name == "Claude Sonnet 3.5":
+            self.anthropic = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
     def make_move(self) -> str:
         self.think()
@@ -17,11 +25,22 @@ class Agent:
         return move
 
     def think(self) -> None:
-        thought = f"{self.name} is analyzing previous moves and formulating a strategy..."
-        if self.opponent_moves:
-            thought += f" Opponent's last move was {self.opponent_moves[-1]}."
-            thought += f" Based on the opponent's move history, they seem to favor {max(set(self.opponent_moves), key=self.opponent_moves.count)}."
-        thought += f" Current scoreboard: {self.last_scoreboard}"
+        prompt = f"You are playing rock-paper-scissors. Your opponent's move history is {self.opponent_moves}. The current scoreboard is {self.last_scoreboard}. What's your strategy for the next move? Explain your reasoning."
+        
+        if self.name == "GPT-4o":
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            thought = response.choices[0].message.content
+        elif self.name == "Claude Sonnet 3.5":
+            response = self.anthropic.completions.create(
+                model="claude-2",
+                prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
+                max_tokens_to_sample=300
+            )
+            thought = response.completion
+
         self.thought_history.append(thought)
 
     def maybe_chat(self) -> None:
@@ -30,37 +49,50 @@ class Agent:
             self.chat(message)
 
     def generate_chat_message(self) -> str:
-        messages = [
-            "I'm feeling lucky this round!",
-            "You'll never guess what I'm going to play.",
-            "Rock is looking pretty good right now...",
-            "Scissors are sharp today.",
-            "I heard paper is the way to go.",
-            f"Interesting move last time. I wonder what you'll do now.",
-            "I'm starting to see a pattern in your moves.",
-            "Let's mix things up a bit, shall we?",
-            "I'm going for the win this time!",
-            "Your strategy is quite intriguing."
-        ]
-        return random.choice(messages)
+        prompt = "Generate a short, strategic message to your opponent in a rock-paper-scissors game. Try to influence their next move or make them second-guess their strategy."
+        
+        if self.name == "GPT-4o":
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            message = response.choices[0].message.content
+        elif self.name == "Claude Sonnet 3.5":
+            response = self.anthropic.completions.create(
+                model="claude-2",
+                prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
+                max_tokens_to_sample=100
+            )
+            message = response.completion
+
+        return message
 
     def chat(self, message: str) -> None:
         full_message = f"{self.name}: {message}"
         self.server.log_chat(full_message)
 
     def guess(self) -> str:
-        choices = ["rock", "paper", "scissors"]
-        if not self.opponent_moves:
-            return random.choice(choices)
+        prompt = f"Based on your previous analysis, what's your next move in rock-paper-scissors? Respond with only 'rock', 'paper', or 'scissors'."
         
-        # Simple strategy: counter the opponent's most frequent move
-        counter_moves = {
-            "rock": "paper",
-            "paper": "scissors",
-            "scissors": "rock"
-        }
-        opponent_favorite = max(set(self.opponent_moves), key=self.opponent_moves.count)
-        return counter_moves[opponent_favorite]
+        if self.name == "GPT-4o":
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            move = response.choices[0].message.content.lower().strip()
+        elif self.name == "Claude Sonnet 3.5":
+            response = self.anthropic.completions.create(
+                model="claude-2",
+                prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
+                max_tokens_to_sample=10
+            )
+            move = response.completion.lower().strip()
+
+        # Ensure valid move
+        if move not in ["rock", "paper", "scissors"]:
+            move = random.choice(["rock", "paper", "scissors"])
+
+        return move
 
     def update_results(self, result: Tuple[str, str]) -> None:
         winner, scoreboard = result
@@ -129,28 +161,33 @@ def play_game(num_rounds: int = 10) -> None:
     for round_num in range(1, num_rounds + 1):
         print(f"\nRound {round_num}")
         
-        # Get moves from agents
-        move1 = agent1.make_move()
-        move2 = agent2.make_move()
+        try:
+            # Get moves from agents
+            move1 = agent1.make_move()
+            move2 = agent2.make_move()
+            
+            # Process round
+            result = server.process_round(agent1, move1, agent2, move2)
+            
+            # Update agents with results
+            agent1.update_results(result)
+            agent2.update_results(result)
+            
+            # Log thought processes
+            print("\nThought processes:")
+            for thought in agent1.thought_history[-1:]:
+                print(f"{agent1.name}: {thought}")
+            for thought in agent2.thought_history[-1:]:
+                print(f"{agent2.name}: {thought}")
+            
+            # Print chat history for this round
+            print("\nChat history for this round:")
+            for message in server.chat_history[-2:]:  # Assuming max 2 messages per round
+                print(message)
         
-        # Process round
-        result = server.process_round(agent1, move1, agent2, move2)
-        
-        # Update agents with results
-        agent1.update_results(result)
-        agent2.update_results(result)
-        
-        # Log thought processes
-        print("\nThought processes:")
-        for thought in agent1.thought_history[-1:]:
-            print(thought)
-        for thought in agent2.thought_history[-1:]:
-            print(thought)
-        
-        # Print chat history for this round
-        print("\nChat history for this round:")
-        for message in server.chat_history[-2:]:  # Assuming max 2 messages per round
-            print(message)
+        except Exception as e:
+            print(f"An error occurred in round {round_num}: {str(e)}")
+            continue
     
     # Print final results
     server.print_final_results()

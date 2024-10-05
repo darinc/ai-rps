@@ -12,11 +12,16 @@ class Agent:
         self.last_result: str = ""
         self.last_scoreboard: str = ""
         self.opponent_moves: List[str] = []
+        self.log_file = f"{name.lower().replace(' ', '-')}-thought.log"
         
         if self.name == "GPT-4o":
             self.openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         elif self.name == "Claude Sonnet 3.5":
             self.anthropic = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+    def log_thought(self, round_num: int, thought: str):
+        with open(self.log_file, 'a') as f:
+            f.write(f"Round {round_num}:\n{thought}\n\n")
 
     def make_move(self) -> str:
         self.think()
@@ -62,6 +67,7 @@ class Agent:
             )
             thought = response.completion
 
+        self.log_thought(len(self.thought_history) + 1, thought)
         self.thought_history.append(thought)
 
     def maybe_chat(self) -> None:
@@ -139,6 +145,7 @@ class Server:
             "Ties": 0
         }
         self.chat_history: List[str] = []
+        self.chat_log_file = "chat.log"
 
     def process_round(self, agent1: Agent, move1: str, agent2: Agent, move2: str) -> Tuple[str, str]:
         print(f"{agent1.name} chose {move1}")
@@ -164,8 +171,10 @@ class Server:
     def get_scoreboard(self) -> str:
         return f"Scoreboard: {self.scoreboard}"
 
-    def log_chat(self, message: str) -> None:
+    def log_chat(self, round_num: int, message: str) -> None:
         self.chat_history.append(message)
+        with open(self.chat_log_file, 'a') as f:
+            f.write(f"Round {round_num}: {message}\n")
 
     def print_final_results(self) -> None:
         print("\nFinal Results:")
@@ -218,6 +227,7 @@ def play_game(num_rounds: int = 10) -> None:
             print("\nChat history for this round:")
             for message in server.chat_history[-2:]:  # Assuming max 2 messages per round
                 print(message)
+                server.log_chat(round_num, message)
         
         except Exception as e:
             print(f"An error occurred in round {round_num}: {str(e)}")

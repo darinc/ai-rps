@@ -2,7 +2,7 @@ import os
 import random
 from typing import List, Tuple
 from openai import OpenAI
-from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
+from anthropic import Anthropic
 
 class Agent:
     def __init__(self, name: str, server: 'Server'):
@@ -38,12 +38,14 @@ class Agent:
             )
             return response.choices[0].message.content
         elif self.name == "Claude Sonnet 3.5":
-            response = self.client.completions.create(
+            message = self.client.messages.create(
                 model=self.model,
-                prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
-                max_tokens_to_sample=max_tokens
+                max_tokens=max_tokens,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
             )
-            return response.completion
+            return message.content[0].text
 
     def review_and_update_guess(self, initial_guess: str, opponent_chat: str) -> str:
         prompt = f"You initially guessed {initial_guess} for this round of rock-paper-scissors. Your opponent then said: '{opponent_chat}'. Would you like to change your guess? If yes, what's your new guess? If no, stick with your original guess. Respond with only 'rock', 'paper', 'scissors', or 'stay'."
